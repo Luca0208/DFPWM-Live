@@ -1,5 +1,5 @@
 #!/bin/sh
-# Usage: ./stream_mp3youtube.sh <WSPort> <Youtube URL>
+# Usage: ./stream_youtube.sh <WSPort> <Youtube URL>
 # Requires: ffmpeg, youtube-dl packages
 # Sometimes youtube-dl will refuse to accept the video, guess that's their bug
 # RE: Make sure you use the most latest version of youtube-dl, if possible, do the manual option here https://yt-dl.org/update

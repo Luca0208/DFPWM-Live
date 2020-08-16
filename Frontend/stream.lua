@@ -1,6 +1,43 @@
 local version="c6a1b7fcdc91aa13eb1ae9496860ac8ebc0b905a"
-local wsurl = "ws://my.tld:1234"
+local wsurl = settings.get("radio.wsurl")
 local rawtape = peripheral.find("tape_drive")
+
+local handle = http.get("https://raw.githubusercontent.com/Luca0208/DFPWM-Live/master/.version")
+if handle then
+    local data = handle.readAll()
+    handle.close()
+    local latest = data:match("commit ([0-9a-f]+)\n")
+    if not latest then
+        printError("Malformed .version file! Please check manually at https://github.com/Luca0208/DFPWM-Live")
+    else
+        if version ~= latest then
+            print("Updating!")
+            print(data)
+            local s = shell.getRunningProgram()
+            handle = http.get("https://raw.githubusercontent.com/Luca0208/DFPWM-Live/master/Frontend/stream.lua")
+            if not handle then
+                printError("Could not download new version :( Please check manually at https://github.com/Luca0208/DFPWM-Live")
+            else
+                data = handle.readAll()
+                local f = fs.open(s, "w")
+                handle.close()
+                f.write(data)
+                f.close()
+                shell.run(s, ...)
+                return
+            end
+        end
+    end
+else
+    printError("Couldn't check for updates, please check manually at https://github.com/Luca0208/DFPWM-Live")
+end
+
+if not wsurl then
+    printError("Websocket URL not set!")
+    printError("Use \"set radio.wsurl <URL>\" to set it")
+    return
+end
+
 local peripheralCalls = 0
 
 local tape = setmetatable({}, {

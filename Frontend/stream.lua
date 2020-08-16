@@ -29,19 +29,12 @@ local curWrite = tape.getPosition()
 
 local buffer = 5 * 9000 -- 5 seconds buffer at the end
 
---[[local function truncate(data)
-    local e = #data
-    while data:sub(e,e):byte() == 0 do
-        e = e - 1
-        if e == 0 then break end
-    end
-    local s = 0
-    while data:sub(s,s):byte() == 0 do
-        s = s + 1
-        if s > e then break end
-    end
-    return data:sub(s, e)
-end]]--
+local function wipeTape()
+    tape.stop()
+    tape.seek(-math.huge)
+    tape.write(("\000"):rep(size))
+    tape.seek(-math.huge)
+end
 
 local handler = {
     ["websocket_success"] = function(url, ws)
@@ -57,20 +50,18 @@ local handler = {
     end,
     ["websocket_closed"] = function(url)
         if url == wsurl then
-            print("Connection closed")
-            print("Data written: ",total)
-            tape.seek(-math.huge)
+            running = false
         end
     end,
     ["websocket_message"] = function(url, data)
         if url == wsurl then
             cData = cData .. data
-            
+            total = total + #data
         end
     end,
-    ["key"] = function(key, held)
-        if key == keys.r then
-            http.websocketAsync(wsurl)
+    ["char"] = function(c)
+        if c:lower() == "q" then
+            running = false
         end
     end,
     ["timer"] = function(t)
@@ -91,7 +82,6 @@ local handler = {
                 local prevWrite = curWrite
                 tape.seek(curWrite - tape.getPosition())
                 tape.write(cData)
-                total = total + #cData
                 curWrite = tape.getPosition()
                 if curWrite > size - buffer then
                     -- We're at the end and need to mirror to the beginning
@@ -117,6 +107,9 @@ local handler = {
 
             repeatingTimer = os.startTimer(1)
         end
+    end,
+    ["terminate"] = function()
+        running = false
     end
 }
 
@@ -125,8 +118,14 @@ startTimer = os.startTimer(5)
 repeatingTimer = os.startTimer(1)
 
 while running do
-    local e = {os.pullEvent()}
+    local e = {os.pullEventRaw()}
     if handler[e[1]] then
         handler[e[1]](unpack(e, 2))
     end
 end
+
+-- Unfortunately because we have no way of checking wether a websocket is open this is the best we can do
+pcall(function() wss.close() end)
+print("Connection closed")
+print("Data received:",total)
+wipeTape()

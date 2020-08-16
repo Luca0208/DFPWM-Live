@@ -1,5 +1,18 @@
 local wsurl = "ws://my.tld:1234"
-local tape = peripheral.find("tape_drive")
+local rawtape = peripheral.find("tape_drive")
+local peripheralCalls = 0
+
+local tape = setmetatable({}, {
+    __index = function(_, i)
+        if rawtape[i] then
+            return function(...)
+                peripheralCalls = peripheralCalls + 1
+                return rawtape[i](...)
+            end
+        end
+    end
+})
+
 local running = true
 local wss
 local total = 0

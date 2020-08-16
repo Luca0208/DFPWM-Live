@@ -158,7 +158,7 @@ local handler = {
                 format(total, 2, true) .. "B",
                 format(peripheralCalls, 2),
                 format(peripheralCalls/(os.clock() - started), 2) .. "/s",
-                format(curRead/size, 0) .. "%"
+                format((curRead/size)*100, 0) .. "%"
             ))
 
             if bufferHealth < 2 * 9000 then -- Less than 2 seconds of buffer remaining

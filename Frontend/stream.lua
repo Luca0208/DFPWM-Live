@@ -54,9 +54,13 @@ local tape = setmetatable({}, {
 local running = true
 local wss
 local total = 0
+local startedPlaying = os.clock() + 5
+local lastWrite = os.clock()
+local dlSpeed = 0
 local startTimer
 local repeatingTimer
 local size = tape.getSize()
+local curIndicatorpos = 0
 
 local cData = "" -- cummulative Data
 
@@ -72,6 +76,23 @@ local function wipeTape()
     tape.seek(-math.huge)
     tape.write(("\000"):rep(size))
     tape.seek(-math.huge)
+end
+
+local prefix = {"", "K", "M", "G", "T"}
+local function format(num, _decimals, useIEC)
+    local factor = useIEC and 1024 or 1000
+    local decimals = math.pow(10, _decimals or 2)
+    local i = 1
+    while prefix[i] and num >= factor do
+        i = i + 1
+        num = num/factor
+    end
+    num = math.floor(num * decimals + 0.5)/decimals
+    if prefix[i] == "" then
+        return tostring(num)
+    else
+        return tostring(num) .. prefix[i] .. (useIEC and "i" or "")
+    end
 end
 
 local handler = {
@@ -105,6 +126,7 @@ local handler = {
     ["timer"] = function(t)
         if t == startTimer then
             tape.play()
+            startedPlaying = os.clock()
         elseif t == repeatingTimer then
             local curRead = tape.getPosition()
 
@@ -113,6 +135,20 @@ local handler = {
             end
 
             local bufferHealth = curWrite%(size-buffer) - curRead%(size-buffer)
+
+            local x, y = term.getCursorPos()
+            term.setCursorPos(1, y)
+            term.clearLine()
+
+            local runTime = math.max(os.clock() - startedPlaying, 0)
+            local hours = math.floor(runTime/(3600))
+            local minutes = (runTime%3600)/60
+            local seconds = (runTime%60)
+
+            local formattedTime = ("%2d:%2d:%2d"):format(hours, minutes, seconds):gsub(" ", "0")
+
+            term.write(("%s %s %9s"):format(formattedTime, format(dlSpeed, 1, true) .. "B/s", format(total, 2, true) .. "B"))
+
             if bufferHealth < 2 * 9000 then -- Less than 2 seconds of buffer remaining
                 if curWrite + #cData > size then
                     curWrite = curWrite - (size - buffer)
@@ -138,9 +174,9 @@ local handler = {
                     tape.write(cData)
                 end
                 tape.seek(curRead - tape.getPosition())
-                print(curRead .. "/" .. curWrite)
-
+                dlSpeed = #cData / (os.clock() - lastWrite)
                 cData = ""
+                lastWrite = os.clock()
             end
 
             repeatingTimer = os.startTimer(1)
@@ -165,5 +201,5 @@ end
 -- Unfortunately because we have no way of checking wether a websocket is open this is the best we can do
 pcall(function() wss.close() end)
 print("Connection closed")
-print("Data received:",total)
+print("Data received:",format(total, nil, true) .. "B")
 wipeTape()

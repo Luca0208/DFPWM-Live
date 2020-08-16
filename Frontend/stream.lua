@@ -1,4 +1,4 @@
-local version="29667b9a6799acfcc8222048bb7cec081a9b1fda"
+local version="415c60ac79f435aaf1d4ec2a0d0b725dabfe171e"
 local wsurl = settings.get("radio.wsurl")
 local rawtape = peripheral.find("tape_drive")
 

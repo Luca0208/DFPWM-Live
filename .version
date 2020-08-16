@@ -1,5 +1,5 @@
-commit 33216569d20f5ee8bc7d01a834fd4665112916c5
+commit 607d92e8c7d865c261be04092daa4888f3d9496d
 Author: Luca <luca@acul.me>
-Date:   Sun Aug 16 23:47:08 2020 +0200
+Date:   Mon Aug 17 00:10:17 2020 +0200
 
-    Fix bitrate in stream_localaudio.sh
+    Add playing statistics

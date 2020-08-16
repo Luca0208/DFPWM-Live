@@ -1,5 +1,5 @@
-commit 923cbef281acbbce69ecde19419ecb0ce4030ed4
+commit 973354587c0e635d306662502aed14b93db7f26d
 Author: Luca <luca@acul.me>
-Date:   Mon Aug 17 00:46:20 2020 +0200
+Date:   Mon Aug 17 01:12:25 2020 +0200
 
-    Fix current tape position statistic
+    Add GPLv2

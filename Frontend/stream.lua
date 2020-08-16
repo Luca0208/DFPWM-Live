@@ -43,6 +43,17 @@ local handler = {
         if url == wsurl then
             print("Connection closed")
             print("Data written: ",total)
+            local k = tape.getSize()
+            tape.stop()
+            tape.seek(-k)
+            tape.stop() --Just making sure
+            tape.seek(-90000)
+            local s = string.rep("\xAA", 8192)
+            for i = 1, k + 8191, 8192 do
+                tape.write(s)
+            end
+            tape.seek(-k)
+            tape.seek(-90000)
             tape.seek(-math.huge)
         end
     end,

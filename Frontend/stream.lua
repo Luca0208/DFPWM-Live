@@ -1,4 +1,4 @@
-local version="19ed699ba3fb004960f812d38533e9b309f38131"
+local version="c6a1b7fcdc91aa13eb1ae9496860ac8ebc0b905a"
 local wsurl = "ws://my.tld:1234"
 local rawtape = peripheral.find("tape_drive")
 local peripheralCalls = 0

@@ -1,5 +1,5 @@
-commit c6a1b7fcdc91aa13eb1ae9496860ac8ebc0b905a
+commit 6a22d1b2de2cf6e4c661a18c91f2b6ab241ea642
 Author: Luca <luca@acul.me>
-Date:   Sun Aug 16 22:57:51 2020 +0200
+Date:   Sun Aug 16 23:10:56 2020 +0200
 
-    Add auto versioning
+    Add auto updating and load wsurl from settings

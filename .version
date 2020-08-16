@@ -1,5 +1,5 @@
-commit 2ba2bb287a716a28f29fd6d3eac1b17c7e4b6c30
+commit 33216569d20f5ee8bc7d01a834fd4665112916c5
 Author: Luca <luca@acul.me>
-Date:   Sun Aug 16 23:31:39 2020 +0200
+Date:   Sun Aug 16 23:47:08 2020 +0200
 
-    Auto versioning should only consider changes to stream.lua
+    Fix bitrate in stream_localaudio.sh

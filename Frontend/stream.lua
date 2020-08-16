@@ -4,14 +4,17 @@ local running = true
 local wss
 local total = 0
 local startTimer
-local wraparoundTimer
+local repeatingTimer
+local size = tape.getSize()
+
+local cData = "" -- cummulative Data
 
 tape.seek(-math.huge)
 tape.setSpeed(2)
 
 local curWrite = tape.getPosition()
 
-local buffer = 5 * 6000 -- 2 seconds buffer at the end
+local buffer = 5 * 9000 -- 5 seconds buffer at the end
 
 --[[local function truncate(data)
     local e = #data
@@ -48,35 +51,8 @@ local handler = {
     end,
     ["websocket_message"] = function(url, data)
         if url == wsurl then
-            local curRead = tape.getPosition()
-            if curWrite + #data > tape.getSize() then
-                curWrite = curWrite - (tape.getSize() - buffer)
-            end
-            local prevWrite = curWrite
-            tape.seek(curWrite - tape.getPosition())
-            tape.write(data)
-            total = total + #data
---            write(".")
-            curWrite = tape.getPosition()
-            if curWrite > tape.getSize() - buffer then
-                -- We're at the end and need to mirror to the beginning
-                local offsetInBuffer = prevWrite - (tape.getSize()-buffer)
-                local toWrite = data
-                if offsetInBuffer < 0 then
-                    toWrite = data:sub(-offsetInBuffer)
-                end
-                tape.seek(offsetInBuffer - tape.getPosition())
-                tape.write(toWrite)
-            elseif prevWrite < buffer then
-                -- We're at the beginning and need to mirror to the end
-                local offsetInBuffer = prevWrite
-                local nPos = (tape.getSize() - buffer) + offsetInBuffer
-                tape.seek(nPos - tape.getPosition())
-                tape.write(data)
-            end
-            tape.seek(curRead - tape.getPosition())
---            print(curWrite - curRead) -- Buffer health
-            print(curRead .. "/" .. curWrite)
+            cData = cData .. data
+            
         end
     end,
     ["key"] = function(key, held)
@@ -87,20 +63,53 @@ local handler = {
     ["timer"] = function(t)
         if t == startTimer then
             tape.play()
-        elseif t == wraparoundTimer then
-            if tape.getPosition() > tape.getSize() - buffer then
-                tape.seek((buffer - (tape.getSize() - tape.getPosition())) - tape.getPosition())
-                -- | BUFFER | POS | BUFFER | END
-                print("WRAP AROUND!")
+        elseif t == repeatingTimer then
+            local curRead = tape.getPosition()
+
+            if curRead > size - buffer then
+                tape.seek((buffer - (size - curRead)) - curRead)
             end
-            wraparoundTimer = os.startTimer(1)
+
+            local bufferHealth = curWrite%(size-buffer) - curRead%(size-buffer)
+            if bufferHealth < 2 * 9000 then -- Less than 2 seconds of buffer remaining
+                if curWrite + #cData > size then
+                    curWrite = curWrite - (size - buffer)
+                end
+                local prevWrite = curWrite
+                tape.seek(curWrite - tape.getPosition())
+                tape.write(cData)
+                total = total + #cData
+                curWrite = tape.getPosition()
+                if curWrite > size - buffer then
+                    -- We're at the end and need to mirror to the beginning
+                    local offsetInBuffer = prevWrite - (size-buffer)
+                    local toWrite = cData
+                    if offsetInBuffer < 0 then
+                        toWrite = cData:sub(-offsetInBuffer)
+                    end
+                    tape.seek(offsetInBuffer - curWrite)
+                    tape.write(toWrite)
+                elseif prevWrite < buffer then
+                    -- We're at the beginning and need to mirror to the end
+                    local offsetInBuffer = prevWrite
+                    local nPos = (size - buffer) + offsetInBuffer
+                    tape.seek(nPos - curWrite)
+                    tape.write(cData)
+                end
+                tape.seek(curRead - tape.getPosition())
+                print(curRead .. "/" .. curWrite)
+
+                cData = ""
+            end
+
+            repeatingTimer = os.startTimer(1)
         end
     end
 }
 
 http.websocketAsync(wsurl)
 startTimer = os.startTimer(5)
-wraparoundTimer = os.startTimer(1)
+repeatingTimer = os.startTimer(1)
 
 while running do
     local e = {os.pullEvent()}

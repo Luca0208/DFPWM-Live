@@ -1,0 +1,25 @@
+name: VersionUpdate
+
+on: [push]
+
+jobs:
+  build:
+    name: Update Version
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Update the version
+      run: |
+        git log -1 > .version
+        ver=`git rev-parse HEAD`
+        sed -i "1clocal version=\"$ver\"" Frontend/stream.lua
+
+    - name: Commit changes
+      uses: alexesprit/action-update-file@master
+      with:
+        file-path: |
+          .version
+          Frontend/stream.lua
+        commit-msg: Update version
+        github-token: ${{ secrets.GITHUB_TOKEN }}

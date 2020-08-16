@@ -100,8 +100,8 @@ local handler = {
     ["websocket_success"] = function(url, ws)
         if url == wsurl then
             print("Thanks for using DFPWM-Live!")
-            print("Playtime|  DL   |DL Total |Periph. Calls |")
-            print("--------|-------|---------|------|-------|")
+            print("|Playtime|  DL   |DL Total |Periph. Calls |Pos.|")
+            print("|--------|-------|---------|------|-------|----|")
             startTimer = os.startTimer(5)
             repeatingTimer = os.startTimer(1)
             wss = ws
@@ -152,12 +152,13 @@ local handler = {
 
             local formattedTime = ("%2d:%2d:%2d"):format(hours, minutes, seconds):gsub(" ", "0")
 
-            term.write(("%s|%7s|%9s|%6s|%7s"):format(
+            term.write(("|%s|%7s|%9s|%6s|%7s|%4s|"):format(
                 formattedTime,
                 format(dlSpeed, 0, true) .. "B/s",
                 format(total, 2, true) .. "B",
                 format(peripheralCalls, 2),
-                format(peripheralCalls/(os.clock() - started), 2) .. "/s"
+                format(peripheralCalls/(os.clock() - started), 2) .. "/s",
+                format(curRead/size, 0) .. "%"
             ))
 
             if bufferHealth < 2 * 9000 then -- Less than 2 seconds of buffer remaining
